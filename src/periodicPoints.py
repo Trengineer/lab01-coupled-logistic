@@ -22,6 +22,30 @@ def F(x, y, r1, r2, eps):
 
     return x1, y1
 
+def F2(x, y, r1, r2, eps):
+    """
+    same parameters as F
+
+    returns:
+    F applied two times, which is 
+    x2: normalized population at generation n + 2
+    y2: another normalized population at generation n + 2
+    """
+    x1, y1 = F(x, y, r1, r2, eps)
+    return F(x1, y1, r1, r2, eps)
+
+def F3(x, y, r1, r2, eps):
+    """
+    same parameters as F
+
+    returns:
+    F applied three times, which is 
+    x3: normalized population at generation n + 3
+    y3: another normalized population at generation n + 3
+    """
+    x1, y1 = F2(x, y, r1, r2, eps)
+    return F(x1, y1, r1, r2, eps)
+
 def main():
     print(F(0, 0, 3.1, 3.4, 0.3))
 if __name__ == "__main__":
