@@ -62,7 +62,8 @@ def main():
 
     # ── Plot ──
     fig, ax = plt.subplots(figsize=(12, 7))
-    ax.plot(r2_col, x_col, ',', color='black', markersize=0.2, alpha=0.5)
+    ax.scatter(r2_col, x_col, s=0.3, color='midnightblue', alpha=1.0, 
+               edgecolors='none', linewidths=0)
 
     ax.set_xlabel(r'$r_2$', fontsize=14)
     ax.set_ylabel(r'$x_n$ (long-time values)', fontsize=14)
