@@ -1,3 +1,4 @@
+import numpy as np
 def F(x, y, r1, r2, eps):
     """
     This is the Map function, it takes in normalized populations x and y, 
@@ -46,8 +47,28 @@ def F3(x, y, r1, r2, eps):
     x1, y1 = F2(x, y, r1, r2, eps)
     return F(x1, y1, r1, r2, eps)
 
+def JacobianF(x, y, r1, r2, eps):
+    """
+    Calculates and returns the 2x2 Jabobian matrix for F.
+    The jacobian of F is defined as follows:
+    we have F(x,y) = (x1, y1)
+    J_f = [dx1/dx dx1/dy
+           dy1/dx dy1/dy] 
+    Parameters: 
+    Same as in F(x, y, r1, r2, eps)
+    Returns:
+    The Jacobian of F as a 2x2 matrix consisting of 
+    all partial derivatives of F
+    """
+    J_f = np.array[2,2]
+    J_f[0,0] = 
+    return
+
 def main():
+    #sanity check, fixed points
     print(F(0, 0, 3.1, 3.4, 0.3))
+    print(F2(0, 0, 3.1, 3.4, 0.3))
+    print(F3(0, 0, 3.1, 300, 0.3))
 if __name__ == "__main__":
     main()
 
