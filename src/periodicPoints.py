@@ -60,9 +60,88 @@ def JacobianF(x, y, r1, r2, eps):
     The Jacobian of F as a 2x2 matrix consisting of 
     all partial derivatives of F
     """
-    J_f = np.array[2,2]
-    J_f[0,0] = 
-    return
+    J_f = np.zeros((2, 2))
+    J_f[0,0] = (1 - eps) * r1 -  2 * (1 - eps) * r1 * x
+    J_f[0,1] =  eps * r2 - 2 *  eps * r2 * y 
+    J_f[1,0] = eps * r1 - 2 * eps * r1 * x
+    J_f[1,1] = (1 - eps) * r2 - 2 * (1 - eps) * r2 * y
+    return J_f
+
+def JacobianF2(x, y, r1, r2, eps):
+    """
+    Calculates and returns the 2x2 Jabobian matrix for F2.
+    The chain rule for matrix derivatives says the Jacobian of a 
+    composition is the product of the Jacobians at each point along the orbit
+
+    Parameters: 
+    Same as in F(x, y, r1, r2, eps)
+    Returns:
+    The Jacobian of F2 as a 2x2 matrix consisting of 
+    all partial derivatives of F2
+    """
+    x1, y1 = F(x, y, r1, r2, eps)
+    return JacobianF(x1, y1, r1, r2, eps) @ JacobianF(x, y, r1, r2, eps)
+
+def JacobianF3(x, y, r1, r2, eps):
+    """
+    Calculates and returns the 2x2 Jabobian matrix for F3.
+    The chain rule for matrix derivatives says the Jacobian of a 
+    composition is the product of the Jacobians at each point along the orbit
+
+    Parameters: 
+    Same as in F(x, y, r1, r2, eps)
+    Returns:
+    The Jacobian of F3 as a 2x2 matrix consisting of 
+    all partial derivatives of F3
+    """
+    x1, y1 = F2(x, y, r1, r2, eps)
+    return JacobianF(x1, y1, r1, r2, eps) @ JacobianF2(x, y, r1, r2, eps)
+
+def newton(x0, y0, p, r1, r2, eps, tol=1e-10, max_iter=50):
+    """
+    Applies Newtons method to find a period-p point of the coupled map,
+    starting from the initial guess (x0, y0)
+    
+    :param x0: initial guess of x
+    :param y0: initial guess of y
+    :param p: period
+    :param r1: same as before
+    :param r2: same as before
+    :param eps: same as before
+    :param tol: tolerating factor for the newton method
+    :param max_iter: max # of iterations
+    Returns:
+    the period-p point as (x,y) coordinates
+
+    """
+    for n in range(max_iter):
+        if p == 2:
+            x2, y2 = F2(x0, y0, r1, r2, eps)
+            G = np.array([x2 - x0, y2 - y0])
+            if np.linalg.norm(G) < tol:
+                return x0, y0
+            else:
+                J = JacobianF2(x0, y0, r1, r2, eps) - np.eye(2)
+                delta = np.linalg.solve(J, -G)
+                x0 += delta[0]
+                y0 += delta[1]
+        elif p == 3:
+            x2, y2 = F3(x0, y0, r1, r2, eps)
+            G = np.array([x2 - x0, y2 - y0])
+            if np.linalg.norm(G) < tol:
+                return x0, y0
+            else:
+                J = JacobianF3(x0, y0, r1, r2, eps) - np.eye(2)
+                delta = np.linalg.solve(J, -G)
+                x0 += delta[0]
+                y0 += delta[1]
+        else:
+            raise ValueError("please pick either 2- or 3-orbit")
+    if np.linalg.norm(G) >= tol:
+        print("no solution found within max tolerance")
+        return None
+    return x0, y0
+
 
 def main():
     #sanity check, fixed points
