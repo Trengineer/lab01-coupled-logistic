@@ -97,7 +97,7 @@ def JacobianF3(x, y, r1, r2, eps):
     x1, y1 = F2(x, y, r1, r2, eps)
     return JacobianF(x1, y1, r1, r2, eps) @ JacobianF2(x, y, r1, r2, eps)
 
-def newton(x0, y0, p, r1, r2, eps, tol=1e-10, max_iter=50):
+def newton2D(x0, y0, p, r1, r2, eps, tol=1e-10, max_iter=50):
     """
     Applies Newtons method to find a period-p point of the coupled map,
     starting from the initial guess (x0, y0)
@@ -138,121 +138,88 @@ def newton(x0, y0, p, r1, r2, eps, tol=1e-10, max_iter=50):
         else:
             raise ValueError("please pick either 2- or 3-orbit")
     if np.linalg.norm(G) >= tol:
-        print("no solution found within max tolerance")
         return None
     return x0, y0
 
+def is_minimal_period(x, y, p, r1, r2, eps, tol=1e-6):
+    # check its not a fixed point
+    x1, y1 = F(x, y, r1, r2, eps)
+    if np.sqrt((x1-x)**2 + (y1-y)**2) < tol:
+        return False
+    # for period 3, also check its not period-2
+    if p == 3:
+        x2, y2 = F2(x, y, r1, r2, eps)
+        if np.sqrt((x2-x)**2 + (y2-y)**2) < tol:
+            return False
+    return True
+
+def find_periodic_orbit(p, r1, r2, eps, n_guesses=50):
+    results = []
+    values = np.linspace(0, 1, n_guesses)
+    for x0 in values:
+        for y0 in values:
+            solution = newton2D(x0, y0, p, r1, r2, eps, tol=1e-8, max_iter=100)
+            if solution is not None:
+                if 0 <= solution[0] <= 1 and 0 <= solution[1] <= 1: #accept only physical solutions
+                    if is_minimal_period(solution[0], solution[1], p, r1, r2, eps, tol=1e-6): #Check that it is the minimal orbit
+                        results.append((x0, y0, solution))  
+
+    unique = []
+    for sol in results:
+        is_duplicate = False
+        for existing in unique:
+            if np.sqrt((sol[2][0] - existing[2][0])**2 + (sol[2][1] - existing[2][1])**2) < 1e-6:
+                is_duplicate = True
+                break
+        if not is_duplicate:
+            unique.append(sol)
+
+    return unique
+
+
+
 
 def main():
-    #sanity check, fixed points
-    print(F(0, 0, 3.1, 3.4, 0.3))
-    print(F2(0, 0, 3.1, 3.4, 0.3))
-    print(F3(0, 0, 3.1, 300, 0.3))
+    param_sets = [
+        (3.1, 3.4, 0.3),
+        (3.1, 3.55, 0.3),
+        (3.1, 3.8, 0.3),
+        (3.1, 5, 0.3),
+    ]
+
+    for p in [2, 3]:
+        for r1, r2, eps in param_sets:
+            print(f"======== Period-{p} orbits for (r1, r2, ε) = ({r1}, {r2}, {eps}) =========")
+            orbits = find_periodic_orbit(p=p, r1=r1, r2=r2, eps=eps)
+            for x0_guess, y0_guess, sol in orbits:
+                print(f"  solution {sol} found from initial guess ({x0_guess:.4f}, {y0_guess:.4f})")
+
+    print("\n------Verification of period-2 orbits-------")
+    for r1, r2, eps in param_sets:
+        print(f"  (r1, r2, ε) = ({r1}, {r2}, {eps})")
+        orbits = find_periodic_orbit(p=2, r1=r1, r2=r2, eps=eps, n_guesses=50)
+        for i, (x0_guess, y0_guess, sol) in enumerate(orbits):
+            x, y = sol
+            x1, y1 = F(x, y, r1, r2, eps)
+            x2, y2 = F2(x, y, r1, r2, eps)
+            print(f"    Point {i}: ({x:.6f}, {y:.6f})")
+            print(f"      F  -> ({x1:.6f}, {y1:.6f})")
+            print(f"      F2 -> ({x2:.6f}, {y2:.6f})  (should match point {i})")
+        print()
+
+    print("------Verification of period-3 orbits-------")
+    for r1, r2, eps in param_sets:
+        print(f"  (r1, r2, ε) = ({r1}, {r2}, {eps})")
+        orbits = find_periodic_orbit(p=3, r1=r1, r2=r2, eps=eps, n_guesses=50)
+        for i, (x0_guess, y0_guess, sol) in enumerate(orbits):
+            x, y = sol
+            x1, y1 = F(x, y, r1, r2, eps)
+            x2, y2 = F2(x, y, r1, r2, eps)
+            x3, y3 = F3(x, y, r1, r2, eps)
+            print(f"    Point {i}: ({x:.6f}, {y:.6f})")
+            print(f"      F  -> ({x1:.6f}, {y1:.6f})")
+            print(f"      F2 -> ({x2:.6f}, {y2:.6f})")
+            print(f"      F3 -> ({x3:.6f}, {y3:.6f})  (should match point {i})")
+        print()
 if __name__ == "__main__":
     main()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# """
-# Exercise 2: Periodic orbits of period 2 and 3.
-
-# Finds periodic points by solving G_p(x, y) = F^p(x, y) - (x, y) = 0
-# using scipy.optimize.fsolve (Newton based).
-# """
-
-# import numpy as np
-# from scipy.optimize import fsolve
-# import matplotlib.pyplot as plt
-# from coupled_map import coupled_map, compose
-
-# # --- Parameters ---
-# PARAM_SETS = [
-#     (3.1, 3.4, 0.3),
-#     (3.1, 3.55, 0.3),
-#     (3.1, 3.8, 0.3),
-# ]
-
-
-# def G(xy, r1, r2, eps, period):
-#     """Residual: F^p(x,y) - (x,y)."""
-#     x, y = xy
-#     xp, yp = compose(x, y, r1, r2, eps, period)
-#     return [xp - x, yp - y]
-
-
-# def find_periodic_points(r1, r2, eps, period, n_grid=20, tol=1e-10):
-#     """Search for period-p points on a grid of initial guesses."""
-#     solutions = []
-#     for x0 in np.linspace(0.01, 0.99, n_grid):
-#         for y0 in np.linspace(0.01, 0.99, n_grid):
-#             sol, info, ier, msg = fsolve(
-#                 G, [x0, y0], args=(r1, r2, eps, period), full_output=True
-#             )
-#             if ier == 1 and 0 < sol[0] < 1 and 0 < sol[1] < 1:
-#                 # Check it's not a duplicate
-#                 is_new = True
-#                 for s in solutions:
-#                     if np.linalg.norm(sol - s) < 1e-6:
-#                         is_new = False
-#                         break
-#                 if is_new:
-#                     solutions.append(sol)
-#     return solutions
-
-
-# def minimal_period(sol, r1, r2, eps, target_period):
-#     """Check that the solution has exactly the target minimal period."""
-#     x, y = sol
-#     for p in range(1, target_period):
-#         xp, yp = compose(x, y, r1, r2, eps, p)
-#         if abs(xp - x) < 1e-8 and abs(yp - y) < 1e-8:
-#             return p  # actual minimal period is smaller
-#     return target_period
-
-
-# def main():
-#     for r1, r2, eps in PARAM_SETS:
-#         print(f"\n{'='*60}")
-#         print(f"Parameters: r1={r1}, r2={r2}, eps={eps}")
-#         print(f"{'='*60}")
-
-#         for period in [2, 3]:
-#             sols = find_periodic_points(r1, r2, eps, period)
-#             print(f"\n  Period-{period} candidates found: {len(sols)}")
-#             for s in sols:
-#                 mp = minimal_period(s, r1, r2, eps, period)
-#                 tag = f"  (minimal period = {mp})" if mp < period else ""
-#                 print(f"    ({s[0]:.10f}, {s[1]:.10f}){tag}")
-
-#             # TODO: filter out solutions whose minimal period < target
-#             # TODO: print the full orbit for each genuine periodic point
-
-
-# if __name__ == "__main__":
-#     main()
