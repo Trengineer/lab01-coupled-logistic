@@ -125,6 +125,8 @@ def newton2D(x0, y0, p, r1, r2, eps, tol=1e-10, max_iter=50):
                 delta = np.linalg.solve(J, -G)
                 x0 += delta[0]
                 y0 += delta[1]
+                if not (0 <= x0 <= 1 and 0 <= y0 <= 1):
+                    return None
         elif p == 3:
             x2, y2 = F3(x0, y0, r1, r2, eps)
             G = np.array([x2 - x0, y2 - y0])
@@ -135,11 +137,20 @@ def newton2D(x0, y0, p, r1, r2, eps, tol=1e-10, max_iter=50):
                 delta = np.linalg.solve(J, -G)
                 x0 += delta[0]
                 y0 += delta[1]
+                if not (0 <= x0 <= 1 and 0 <= y0 <= 1):
+                    return None
         else:
             raise ValueError("please pick either 2- or 3-orbit")
     if np.linalg.norm(G) >= tol:
         return None
     return x0, y0
+
+def orbit_is_physical(x, y, p, r1, r2, eps):
+    for _ in range(p):
+        x, y = F(x, y, r1, r2, eps)
+        if not (0 <= x <= 1 and 0 <= y <= 1):
+            return False
+    return True
 
 def is_minimal_period(x, y, p, r1, r2, eps, tol=1e-6):
     # check its not a fixed point
@@ -160,9 +171,10 @@ def find_periodic_orbit(p, r1, r2, eps, n_guesses=50):
         for y0 in values:
             solution = newton2D(x0, y0, p, r1, r2, eps, tol=1e-8, max_iter=100)
             if solution is not None:
-                if 0 <= solution[0] <= 1 and 0 <= solution[1] <= 1: #accept only physical solutions
-                    if is_minimal_period(solution[0], solution[1], p, r1, r2, eps, tol=1e-6): #Check that it is the minimal orbit
-                        results.append((x0, y0, solution))  
+                if 0 <= solution[0] <= 1 and 0 <= solution[1] <= 1:
+                    if is_minimal_period(solution[0], solution[1], p, r1, r2, eps, tol=1e-6): #look if the period isnt another period
+                        if orbit_is_physical(solution[0], solution[1], p, r1, r2, eps): #check that intermediate coordinates/populations is inside [0,1]
+                            results.append((x0, y0, solution))
 
     unique = []
     for sol in results:
@@ -175,9 +187,6 @@ def find_periodic_orbit(p, r1, r2, eps, n_guesses=50):
             unique.append(sol)
 
     return unique
-
-
-
 
 def main():
     param_sets = [
