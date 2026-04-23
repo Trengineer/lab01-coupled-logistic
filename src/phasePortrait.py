@@ -18,7 +18,7 @@ PARAM_SETS = [
     (3.85, 3.95, 0.2),  # chaotic regime
 ]
 
-INITIAL_CONDITION = (0.2, 0.3)
+INITIAL_CONDITION = (0.5, 0.5)
 N_TRANSIENT = 500
 N_KEEP = 10000
 
@@ -47,20 +47,23 @@ if __name__ == "__main__":
     x0, y0 = INITIAL_CONDITION
     nSteps = N_TRANSIENT + N_KEEP
 
-    fig, axes = plt.subplots(1, len(PARAM_SETS), figsize=(5 * len(PARAM_SETS), 5))
-
-    for ax, (r1, r2, eps) in zip(axes, PARAM_SETS):
+    for i, (r1, r2, eps) in enumerate(PARAM_SETS):
         x, y = solveOrbit(nSteps, x0, y0, r1, r2, eps)
         x_keep = x[N_TRANSIENT:]
         y_keep = y[N_TRANSIENT:]
 
-        ax.scatter(x_keep, y_keep, s=1)
+        fig, ax = plt.subplots(figsize=(5, 5))
+        if i == 2:
+            ax.scatter(x_keep, y_keep, s=1)
+        else: 
+            ax.scatter(x_keep, y_keep, s=10)
         ax.set_xlabel(r'$x_n$')
         ax.set_ylabel(r'$y_n$')
         ax.set_xlim(0, 1)
         ax.set_ylim(0, 1)
         ax.set_title(fr'$r_1={r1},\; r_2={r2},\; \varepsilon={eps}$')
 
-    fig.tight_layout()
-    plt.savefig(f'./figures/phaseportrait.png')
+        fig.tight_layout()
+        fig.savefig(f'./figures/phaseportrait_{i}.png')
+
     plt.show()
