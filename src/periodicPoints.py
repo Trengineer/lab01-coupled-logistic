@@ -188,17 +188,25 @@ def find_periodic_orbit(p, r1, r2, eps, n_guesses=50):
 
     return unique
 
+def direct_iteration(x0, y0, r1, r2, eps, n_transient=500, n_record=20):
+    x, y = x0, y0
+    for _ in range(n_transient):
+        x, y = F(x, y, r1, r2, eps)
+    print(f"Long-time behaviour for (r1, r2, eps) = ({r1}, {r2}, {eps}):")
+    for _ in range(n_record):
+        x, y = F(x, y, r1, r2, eps)
+        print(f"  x = {x:.6f}, y = {y:.6f}")
+
 def main():
     param_sets = [
         (3.1, 3.4, 0.3),
         (3.1, 3.55, 0.3),
         (3.1, 3.8, 0.3),
-        (3.1, 5, 0.3),
     ]
 
     for p in [2, 3]:
         for r1, r2, eps in param_sets:
-            print(f"======== Period-{p} orbits for (r1, r2, ε) = ({r1}, {r2}, {eps}) =========")
+            print(f"======== Period-{p} orbits for (r1, r2, ε) = ({r1}, {r2}, {eps}) ==========")
             orbits = find_periodic_orbit(p=p, r1=r1, r2=r2, eps=eps)
             for x0_guess, y0_guess, sol in orbits:
                 print(f"  solution {sol} found from initial guess ({x0_guess:.4f}, {y0_guess:.4f})")
@@ -214,6 +222,10 @@ def main():
             print(f"    Point {i}: ({x:.6f}, {y:.6f})")
             print(f"      F  -> ({x1:.6f}, {y1:.6f})")
             print(f"      F2 -> ({x2:.6f}, {y2:.6f})  (should match point {i})")
+            eigs = np.linalg.eigvals(JacobianF2(x, y, r1, r2, eps))
+            print(f"    eigenvalues: {np.abs(eigs).round(4)}  ({'stable' if all(np.abs(eigs) < 1) else 'unstable'})")
+        if orbits: 
+            direct_iteration(0.5, 0.5, r1, r2, eps)
         print()
 
     print("------Verification of period-3 orbits-------")
@@ -229,6 +241,10 @@ def main():
             print(f"      F  -> ({x1:.6f}, {y1:.6f})")
             print(f"      F2 -> ({x2:.6f}, {y2:.6f})")
             print(f"      F3 -> ({x3:.6f}, {y3:.6f})  (should match point {i})")
+            eigs = np.linalg.eigvals(JacobianF3(x, y, r1, r2, eps))
+            print(f"    eigenvalues: {np.abs(eigs).round(4)}  ({'stable' if all(np.abs(eigs) < 1) else 'unstable'})")
+        if orbits:
+            direct_iteration(0.5, 0.5, r1, r2, eps)
         print()
 if __name__ == "__main__":
     main()
