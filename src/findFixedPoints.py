@@ -8,7 +8,7 @@ def fixedPointEquations(vars, r1, r2, eps):
     eq2 = y - ((1 - eps) * r2 * y * (1 - y) + eps * r1 * x * (1 - x))
     return [eq1, eq2]
 
-r1, r2 = 3.4, 4.0
+r1, r2 = 3.4, 4.0 #Vary these maually!
 eps_values = np.linspace(0, 0.5, 100)
 
 x_vals = []
