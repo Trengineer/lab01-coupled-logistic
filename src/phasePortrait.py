@@ -52,6 +52,10 @@ if __name__ == "__main__":
         x_keep = x[N_TRANSIENT:]
         y_keep = y[N_TRANSIENT:]
 
+        print(f'PARAM SET {i}')
+        print(f'Final 2 x-coordinate: {x_keep[-2:]}')
+        print(f'Final 2 y-coordinate: {y_keep[-2:]}')
+
         fig, ax = plt.subplots(figsize=(5, 5))
         if i == 2:
             ax.scatter(x_keep, y_keep, s=1)
@@ -66,4 +70,5 @@ if __name__ == "__main__":
         fig.tight_layout()
         fig.savefig(f'./figures/phaseportrait_{i}.png')
 
-    plt.show()
+    # plt.show()
+
